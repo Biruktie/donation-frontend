@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: my-app-client
+    env: static
+    staticPublishPath: /client/build
+    buildCommand: cd client && npm install && npm run build
+    startCommand: serve -s build
+
+  - type: web
+    name: my-app-server
+    env: node
+    buildCommand: cd server && npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
