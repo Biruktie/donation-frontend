@@ -1,4 +1,5 @@
-import React, { useState, useContext } from "react";
+// src/pages/Login.jsx
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
@@ -11,7 +12,17 @@ const Login = () => {
   const [emailNotFound, setEmailNotFound] = useState(false);
   const [wrongPassword, setWrongPassword] = useState(false);
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext); // login(user, token)
+  const { login } = useContext(AuthContext);
+
+  // 🔄 If user is already logged in, go directly to dashboard
+  useEffect(() => {
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+    if (savedUser?.role === "ngo") {
+      navigate(`/ngo-dashboard/${savedUser.id || savedUser._id}`);
+    } else if (savedUser?.role === "donor") {
+      navigate(`/donor-dashboard/${savedUser.id || savedUser._id}`);
+    }
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,21 +36,20 @@ const Login = () => {
         password,
       });
 
-      // Expecting { token, user: { id/_id, role, name, email } }
+      // Expect backend to return: { token, user: { _id, name, email, role } }
       const { token, user } = res.data;
-      const userId = user.id || user._id;
+      const userId = user._id || user.id;
 
-      // ✅ IMPORTANT: call login with (user, token)
-      login(
-        { id: userId, role: user.role, name: user.name, email: user.email },
-        token
-      );
+      // ✅ Save in AuthContext and localStorage
+      login(user, token);
 
-      // Route by role
+      // Redirect by role
       if (user.role === "ngo") {
         navigate(`/ngo-dashboard/${userId}`);
-      } else {
+      } else if (user.role === "donor") {
         navigate(`/donor-dashboard/${userId}`);
+      } else {
+        setError("Invalid user role");
       }
     } catch (err) {
       const status = err.response?.status;
@@ -54,24 +64,10 @@ const Login = () => {
       ) {
         setWrongPassword(true);
         setError("Incorrect password");
-      } else if (status === 400) {
-        setError(err.response?.data?.message || "Bad request");
       } else {
         setError("Login failed. Please check your credentials.");
       }
     }
-  };
-
-  const onEmailChange = (e) => {
-    setEmail(e.target.value);
-    setEmailNotFound(false);
-    if (error === "Email not found") setError("");
-  };
-
-  const onPasswordChange = (e) => {
-    setPassword(e.target.value);
-    setWrongPassword(false);
-    if (error === "Incorrect password") setError("");
   };
 
   return (
@@ -86,35 +82,44 @@ const Login = () => {
 
         {error && <div className="mb-4 text-red-600 text-center">{error}</div>}
 
+        {/* Email Input */}
         <div className="mb-4">
           <label className="block mb-2 text-gray-700">Email</label>
           <input
             type="email"
             value={email}
-            onChange={onEmailChange}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailNotFound(false);
+            }}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             required
           />
         </div>
 
+        {/* Password Input */}
         <div className="mb-6">
           <label className="block mb-2 text-gray-700">Password</label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={onPasswordChange}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setWrongPassword(false);
+              }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 pr-10"
               required
             />
 
+            {/* Toggle Password Visibility */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-3 flex items-center text-gray-600 hover:text-gray-800 focus:outline-none"
             >
               <div className="relative">
-                {/* Eye icon */}
+                {/* Eye Icon */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -130,7 +135,7 @@ const Login = () => {
                   />
                 </svg>
 
-                {/* Slash line when hidden */}
+                {/* Slash when hidden */}
                 {!showPassword && (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +157,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* If email not found, show targeted register prompt here */}
+        {/* Email Not Found Section */}
         {emailNotFound && (
           <div className="flex items-center justify-center mt-4 mb-2">
             <span className="mr-2 text-green-700 font-medium">
@@ -168,6 +173,7 @@ const Login = () => {
           </div>
         )}
 
+        {/* Submit Button */}
         <button
           type="submit"
           className="w-full bg-green-700 text-white py-2 rounded-lg font-semibold hover:bg-green-500 transition"
@@ -175,7 +181,7 @@ const Login = () => {
           Login
         </button>
 
-        {/* Default CTA only when email isn't not-found */}
+        {/* Default Register CTA */}
         {!emailNotFound && (
           <div className="flex items-center justify-center mt-4 mb-2">
             <span className="mr-2 text-green-700 font-medium">

@@ -8,6 +8,7 @@ const NgoRegister = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [description, setDescription] = useState("");
   const [alreadyRegisteredMsg, setAlreadyRegisteredMsg] = useState("");
   const [otherError, setOtherError] = useState("");
   const navigate = useNavigate();
@@ -22,24 +23,23 @@ const NgoRegister = () => {
         name,
         email,
         password,
+        role: "ngo",
+        description,
       });
 
-      // Show success toast
       toast.success(res.data.message || "NGO registered successfully!");
 
-      // Redirect to dashboard with userId from backend
-      setTimeout(() => navigate(`/ngo-dashboard/${res.data.userId}`), 1500);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       const serverMessage = err.response?.data?.message || "";
 
-      // Special case: email already registered
-      if (serverMessage && serverMessage.toLowerCase().includes("already")) {
+      if (serverMessage.toLowerCase().includes("already")) {
         setAlreadyRegisteredMsg(serverMessage);
-        return;
+      } else {
+        setOtherError(
+          serverMessage || "Registration failed. Please try again."
+        );
       }
-
-      // General errors
-      setOtherError(serverMessage || "Registration failed. Please try again.");
     }
   };
 
@@ -53,10 +53,12 @@ const NgoRegister = () => {
           NGO Registration
         </h2>
 
+        {/* General error */}
         {otherError && (
           <div className="mb-4 text-red-600 text-center">{otherError}</div>
         )}
 
+        {/* NGO Name */}
         <div className="mb-4">
           <label className="block mb-2 text-gray-700">NGO Name</label>
           <input
@@ -68,6 +70,7 @@ const NgoRegister = () => {
           />
         </div>
 
+        {/* Email */}
         <div className="mb-4">
           <label className="block mb-2 text-gray-700">Email</label>
           <input
@@ -79,6 +82,19 @@ const NgoRegister = () => {
           />
         </div>
 
+        {/* Description */}
+        <div className="mb-4">
+          <label className="block mb-2 text-gray-700">Description</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            placeholder="What does your NGO do?"
+          />
+        </div>
+
+        {/* Password */}
         <div className="mb-6">
           <label className="block mb-2 text-gray-700">Password</label>
           <input
@@ -90,7 +106,7 @@ const NgoRegister = () => {
           />
         </div>
 
-        {/* Email already registered */}
+        {/* Email already registered message */}
         {alreadyRegisteredMsg ? (
           <div className="w-full flex flex-col items-center mb-4">
             <div className="mb-2 text-red-600 text-center w-full font-medium">
@@ -116,7 +132,7 @@ const NgoRegister = () => {
           </button>
         )}
 
-        {/* Only show "Already have an account?" if email is NOT already registered */}
+        {/* “Already have an account?” only shows when no error */}
         {!alreadyRegisteredMsg && (
           <div className="text-center mt-2">
             <span className="text-gray-700 mr-2">Already have an account?</span>

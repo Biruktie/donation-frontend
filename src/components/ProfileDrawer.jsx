@@ -1,10 +1,9 @@
 // src/components/ProfileDrawer.jsx
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import ProfileSummary from "./ProfileSummary";
 import {
   FaTachometerAlt,
   FaUserEdit,
@@ -21,6 +20,7 @@ import {
 export default function ProfileDrawer({ open, onClose, onLogout }) {
   const { user, logout } = useContext(AuthContext);
   const userId = user?.id || user?._id || user?.userId;
+  const navigate = useNavigate();
 
   // Close drawer on ESC
   useEffect(() => {
@@ -50,6 +50,15 @@ export default function ProfileDrawer({ open, onClose, onLogout }) {
       logout();
       onClose();
     }
+  };
+
+  const handleViewProfile = () => {
+    if (user.role === "ngo") {
+      navigate(`/ngo-dashboard/${userId}`);
+    } else {
+      navigate(`/profile/${userId}`);
+    }
+    onClose();
   };
 
   // Render even when closed so we can animate the slide out
@@ -86,8 +95,38 @@ export default function ProfileDrawer({ open, onClose, onLogout }) {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto pb-8">
           {/* Profile summary card */}
-          <div className="p-4 border-b border-gray-100">
-            <ProfileSummary />
+          <div className="p-6 pb-4 flex flex-col items-center bg-green-50 rounded-b-xl mb-2">
+            {user?.role === "ngo" && user?.logoUrl ? (
+              <img
+                src={`http://localhost:3000${user.logoUrl}`}
+                alt="NGO Logo"
+                className="w-16 h-16 rounded-full object-cover border border-green-200 mb-2"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-green-200 flex items-center justify-center text-2xl font-bold text-green-800 mb-2">
+                {user?.name
+                  ? user.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)
+                  : "U"}
+              </div>
+            )}
+            <div className="text-lg font-bold text-green-800 text-center">
+              {user?.name || "User"}
+            </div>
+            <div className="text-gray-600 text-sm text-center">
+              {user?.email}
+            </div>
+            <button
+              onClick={handleViewProfile}
+              className="mt-2 text-green-700 text-sm underline hover:text-green-900 bg-transparent border-none p-0 cursor-pointer"
+              type="button"
+            >
+              View profile
+            </button>
           </div>
 
           <div className="flex flex-col gap-2 p-4">
@@ -113,7 +152,11 @@ export default function ProfileDrawer({ open, onClose, onLogout }) {
 
             {/* 2. Edit Profile */}
             <Link
-              to={`/profile/${userId || ""}`}
+              to={
+                user?.role === "ngo"
+                  ? `/ngo-dashboard/${userId}`
+                  : `/profile/${userId}`
+              }
               onClick={onClose}
               className="px-3 py-1.5 rounded-lg hover:bg-green-50 text-green-700 flex items-center gap-2 text-sm"
             >

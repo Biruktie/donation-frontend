@@ -12,6 +12,8 @@ import Contact from "./pages/Contact";
 import NgoDashboard from "./pages/NGODashboard";
 import DonorDashboard from "./pages/DonorDashboard";
 import ProfilePage from "./pages/ProfilePage";
+import CampaignDetails from "./pages/CampaignDetails";
+import MyCampaigns from "./pages/MyCampaigns";
 
 export default function App() {
   return (
@@ -50,6 +52,8 @@ export default function App() {
                     }
                   />
                   <Route path="/profile/:id" element={<ProfilePage />} />
+                  <Route path="/campaign/:id" element={<CampaignDetails />} />
+                  <Route path="/my-campaigns" element={<MyCampaigns />} />
                 </Routes>
               </div>
             </>

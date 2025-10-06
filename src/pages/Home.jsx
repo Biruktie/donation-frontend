@@ -1,8 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaSearch, FaDonate, FaChartLine } from "react-icons/fa";
 
 export default function Home() {
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/campaign");
+        const data = await res.json();
+        setCampaigns(data.filter((c) => c.status === "active"));
+      } catch {
+        setCampaigns([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCampaigns();
+  }, []);
+
   return (
     <div className="w-full font-sans">
       {/* HERO SECTION */}
@@ -113,6 +131,63 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Active Campaigns Section */}
+      {!loading && campaigns.length > 0 && (
+        <section className="py-12 bg-gray-50">
+          <h2 className="text-2xl font-bold text-green-700 text-center mb-8">
+            Active Campaigns
+          </h2>
+          <div>
+            {campaigns.slice(0, 3).map((campaign) => (
+              <div
+                key={campaign._id}
+                className="bg-white rounded-2xl shadow-md border border-green-200 flex flex-col md:flex-row items-center hover:shadow-lg transition max-w-4xl mx-auto mb-8"
+              >
+                {campaign.imageUrl && (
+                  <img
+                    src={
+                      campaign.imageUrl
+                        ? `http://localhost:3000${campaign.imageUrl}`
+                        : `${import.meta.env.BASE_URL}default-campaign.jpg`
+                    }
+                    alt={campaign.title}
+                    className="w-full md:w-1/2 h-64 object-cover rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none"
+                    style={{ objectPosition: "center" }}
+                  />
+                )}
+                <div className="p-8 flex flex-col flex-1 w-full items-center md:items-start">
+                  <h3 className="text-2xl font-bold text-green-700 mb-4 text-center md:text-left">
+                    {campaign.title}
+                  </h3>
+                  <p className="text-gray-700 mb-4 text-center md:text-left">
+                    {campaign.description}
+                  </p>
+                  <div className="text-lg text-gray-600 mb-6 text-center md:text-left">
+                    Target: {campaign.targetAmount} ETB
+                  </div>
+                  <Link
+                    to={`/campaign/${campaign._id}`}
+                    className="bg-green-700 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-semibold transition w-full md:w-auto text-center"
+                  >
+                    Donate
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+          {campaigns.length > 3 && (
+            <div className="flex justify-center mt-6">
+              <Link
+                to="/campaigns"
+                className="bg-green-700 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition"
+              >
+                See Other Campaigns
+              </Link>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* FINAL CTA (Landing page style, original text) */}
       <section className="w-full flex flex-col items-center justify-center py-12 px-4 bg-white">
         <h2 className="text-2xl md:text-3xl font-bold text-green-700 mb-6 text-center">
@@ -136,7 +211,7 @@ export default function Home() {
         <div className="flex items-center justify-center gap-8 mb-2">
           <div className="flex items-center gap-2">
             <img
-              src="/cbe-logo.png"
+              src={`${import.meta.env.BASE_URL}cbe-logo.png`}
               alt="CBE Logo"
               className="h-10 w-auto object-contain"
             />
@@ -144,7 +219,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2">
             <img
-              src="/telebirr-logo.png"
+              src={`${import.meta.env.BASE_URL}telebirr-logo.png`}
               alt="Telebirr Logo"
               className="h-10 w-auto object-contain"
             />

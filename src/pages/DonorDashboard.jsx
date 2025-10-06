@@ -2,12 +2,23 @@ import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import PaymentSettings from "../components/PaymentSettings";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 export default function DonorDashboard() {
   const { user } = useContext(AuthContext);
+  const { id } = useParams();
   const donorName = user?.name || "Donor";
-  const userId = user?.id || user?._id;
+  const userId = id || user?.id || user?._id;
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-green-700 text-xl">
+          Please log in to view your dashboard.
+        </div>
+      </div>
+    );
+  }
 
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({
@@ -16,10 +27,12 @@ export default function DonorDashboard() {
     impact: "",
     savedCampaigns: [],
   });
+  const [activeCampaigns, setActiveCampaigns] = useState([]);
   const isNewDonor =
     summary.totalDonated === 0 && summary.campaignsSupported === 0;
 
   useEffect(() => {
+    if (!userId) return; // Don't run if userId is missing
     let ignore = false;
     async function load() {
       try {
@@ -45,6 +58,18 @@ export default function DonorDashboard() {
       ignore = true;
     };
   }, [userId]);
+
+  useEffect(() => {
+    async function fetchActiveCampaigns() {
+      try {
+        const res = await axios.get("/api/campaign");
+        setActiveCampaigns(res.data.filter((c) => c.status === "active"));
+      } catch (e) {
+        setActiveCampaigns([]);
+      }
+    }
+    fetchActiveCampaigns();
+  }, []);
 
   if (loading) {
     return (
@@ -125,7 +150,14 @@ export default function DonorDashboard() {
             <div className="mb-2">
               Top Causes Supported: Health, Education, Food
             </div>
-            <div>Recent Donations: [List]</div>
+            <div className="mb-2">
+              Recent Donations:
+              <ul className="list-disc list-inside">
+                <li>ETB 500 to Campaign A</li>
+                <li>ETB 300 to Campaign B</li>
+                <li>ETB 200 to Campaign C</li>
+              </ul>
+            </div>
           </div>
         </section>
       ) : (
@@ -145,20 +177,65 @@ export default function DonorDashboard() {
           Active Campaigns
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-green-50 rounded-xl shadow p-4">
-            <div className="font-bold">[NGO Name]</div>
-            <div className="text-sm text-gray-500">[Campaign Title]</div>
-            <div className="my-2 bg-green-100 h-2 rounded">
-              <div
-                className="bg-green-500 h-2 rounded"
-                style={{ width: "60%" }}
-              />
+          {activeCampaigns.length === 0 ? (
+            <div className="col-span-full text-gray-500 text-center py-8">
+              No active campaigns at the moment.
             </div>
-            <button className="mt-2 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
-              Donate Now
-            </button>
-          </div>
+          ) : (
+            activeCampaigns.slice(0, 4).map((campaign) => (
+              <div
+                key={campaign._id}
+                className="bg-green-50 rounded-xl shadow p-4 flex flex-col"
+              >
+                <div className="font-bold text-green-800 text-lg mb-1">
+                  {campaign.ngo?.name || "NGO"}
+                </div>
+                <div className="text-base font-semibold text-green-700 mb-1">
+                  {campaign.title}
+                </div>
+                <div className="text-sm text-gray-600 mb-2">
+                  {campaign.description}
+                </div>
+                <div className="my-2 bg-green-100 h-2 rounded">
+                  <div
+                    className="bg-green-500 h-2 rounded"
+                    style={{
+                      width:
+                        campaign.raisedAmount && campaign.targetAmount
+                          ? `${Math.min(
+                              100,
+                              (campaign.raisedAmount / campaign.targetAmount) *
+                                100
+                            )}%`
+                          : "0%",
+                      transition: "width 0.5s",
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-sm text-gray-700 mb-2">
+                  <span>Raised: {campaign.raisedAmount || 0} ETB</span>
+                  <span>Target: {campaign.targetAmount} ETB</span>
+                </div>
+                <Link
+                  to={`/campaign/${campaign._id}`}
+                  className="mt-2 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-center"
+                >
+                  Donate Now
+                </Link>
+              </div>
+            ))
+          )}
         </div>
+        {activeCampaigns.length > 4 && (
+          <div className="flex justify-center mt-4">
+            <Link
+              to="/campaigns"
+              className="px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800 font-semibold transition"
+            >
+              See More Campaigns
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* Impact & Transparency */}

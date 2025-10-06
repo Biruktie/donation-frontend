@@ -67,7 +67,7 @@ export default function ProfilePage() {
       setError("");
       try {
         // Only one API call
-        const meRes = await api.get("/donor/me");
+        const meRes = await api.get("/api/donor/me");
 
         if (ignore) return;
         const me = meRes.data;
@@ -130,7 +130,8 @@ export default function ProfilePage() {
           },
         },
       };
-      await api.put("/donor/me", payload);
+      await api.put("/api/donor/me", payload);
+      await api.put("/api/donor/me/password", { currentPassword, newPassword });
       setSuccess("Profile saved");
     } catch (err) {
       console.error("Save profile error:", err);

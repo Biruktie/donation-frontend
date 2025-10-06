@@ -1,30 +1,32 @@
-import React from "react";
-
-const ngos = [
-  {
-    id: 1,
-    name: "Macedonia Humanitarian Association",
-    image: "https://example.com/macedonia.jpg",
-    description:
-      "Supporting homeless and vulnerable communities in Addis Ababa.",
-  },
-  {
-    id: 2,
-    name: "Organization for Women in Self Employment (WISE)",
-    image: "https://example.com/wise.jpg",
-    description:
-      "Empowering women through training and microfinance initiatives.",
-  },
-  {
-    id: 3,
-    name: "Hope for Children Organization",
-    image: "https://example.com/hope.jpg",
-    description:
-      "Improving child welfare through education and health programs.",
-  },
-];
+import React, { useEffect, useState } from "react";
 
 export default function NGOs() {
+  const [ngos, setNgos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNgos = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/ngo/");
+        const data = await res.json();
+        setNgos(data);
+      } catch {
+        setNgos([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNgos();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-green-700 text-xl">Loading NGOs...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 to-white py-10 px-4">
       <h1 className="text-3xl font-bold text-green-700 text-center mb-8">
@@ -33,15 +35,30 @@ export default function NGOs() {
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
         {ngos.map((ngo) => (
           <div
-            key={ngo.id}
+            key={ngo._id}
             className="bg-white rounded-2xl shadow-md border border-green-200 flex flex-col items-center hover:shadow-lg transition p-0"
           >
-            <img
-              src={ngo.image}
-              alt={ngo.name}
-              className="h-48 w-full object-cover rounded-t-2xl"
-            />
+            {/* Featured image */}
+            {ngo.featuredImageUrl ? (
+              <img
+                src={`http://localhost:3000${ngo.featuredImageUrl}`}
+                alt={ngo.name}
+                className="h-48 w-full object-cover rounded-t-2xl"
+              />
+            ) : (
+              <div className="h-48 w-full bg-green-50 rounded-t-2xl flex items-center justify-center text-gray-400">
+                No image
+              </div>
+            )}
             <div className="p-6 flex flex-col flex-1 w-full">
+              {/* Logo */}
+              {ngo.logoUrl && (
+                <img
+                  src={`http://localhost:3000${ngo.logoUrl}`}
+                  alt={`${ngo.name} logo`}
+                  className="w-16 h-16 rounded-full object-cover mx-auto mb-2 border border-green-200"
+                />
+              )}
               <h2 className="text-xl font-semibold text-green-700 mb-2 text-center">
                 {ngo.name}
               </h2>

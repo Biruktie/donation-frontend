@@ -41,25 +41,7 @@ const Register = () => {
         <h2 className="text-2xl font-bold mb-6 text-green-700 text-center">
           Register
         </h2>
-        {error && error.toLowerCase().includes("already registered") ? (
-          <div className="mt-6 flex flex-col items-center w-full">
-            <div className="mb-2 text-red-600 text-center w-full">{error}</div>
-            <button
-              type="button"
-              className="w-full bg-green-700 text-white py-2 rounded-lg font-semibold hover:bg-green-500 transition"
-              onClick={() => navigate("/login")}
-            >
-              Login instead
-            </button>
-          </div>
-        ) : (
-          <button
-            type="submit"
-            className="w-full bg-green-700 text-white py-2 rounded-lg font-semibold hover:bg-green-500 transition"
-          >
-            Register
-          </button>
-        )}
+
         {success && (
           <div className="mb-4 text-green-600 text-center">{success}</div>
         )}
@@ -69,6 +51,16 @@ const Register = () => {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-2 text-gray-700">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             required
           />
@@ -102,8 +94,18 @@ const Register = () => {
             Register
           </button>
         )}
-        </form>
-      </div>
-)};
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            className="text-green-700 underline hover:text-green-900 font-medium"
+            onClick={() => navigate("/ngo-register")}
+          >
+            Register as NGO
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
 
 export default Register;
